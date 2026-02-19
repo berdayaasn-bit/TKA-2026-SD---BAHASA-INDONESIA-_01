@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Kuis - Belajar Sukses</title>
+    <style>
+        :root {
+            --primary-blue: #0d6efd;
+            --dark-blue: #1b437c;
+            --bg-light: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-main: #333;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { margin: 0; padding: 0; background-color: var(--bg-light); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* HEADER CBT */
+        .cbt-header { background: white; border-bottom: 2px solid var(--border-color); padding: 15px 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header-left .soal-title { font-size: 1.1rem; color: #555; margin-bottom: 5px; }
+        .header-left .soal-number { font-size: 1.8rem; font-weight: bold; color: black; }
+        .header-left .font-controls { margin-top: 10px; font-size: 0.9rem; color: #666; }
+        .font-controls span { cursor: pointer; margin: 0 5px; font-weight: bold; }
+        .font-controls span:hover { color: var(--primary-blue); }
+        
+        .header-right { text-align: right; }
+        .btn-header { background: var(--primary-blue); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold; margin-left: 5px; display: inline-flex; align-items: center;}
+        .timer-pill { background: white; border: 1px solid #ccc; padding: 7px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-left: 5px; display: inline-block;}
+        .subject-title { margin-top: 10px; font-size: 1rem; font-weight: bold; color: #444; }
+
+        /* MAIN CONTENT - SPLIT SCREEN */
+        .cbt-body { flex: 1; padding: 20px 30px; display: flex; flex-direction: column; }
+        .cbt-card { background: white; border: 1px solid #e0e0e0; border-radius: 8px; flex: 1; display: flex; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; font-size: 16px; transition: font-size 0.2s;}
+        
+        .cbt-left { flex: 1; padding: 30px; border-right: 2px dashed var(--border-color); overflow-y: auto; line-height: 1.6; }
+        .cbt-right { flex: 1; padding: 30px; overflow-y: auto; line-height: 1.6; background: #fafafa; }
+        
+        img { max-width: 100%; height: auto; border-radius: 5px; margin: 10px 0; }
+        .question-text { font-weight: 600; margin-bottom: 20px; }
+
+        /* OPTIONS STYLING */
+        .option-item { display: flex; align-items: flex-start; margin-bottom: 15px; cursor: pointer; padding: 8px; border-radius: 5px; transition: 0.2s;}
+        .option-item:hover { background: #eef2f7; }
+        .option-item input[type="radio"], .option-item input[type="checkbox"] { margin-top: 5px; margin-right: 15px; transform: scale(1.3); cursor: pointer;}
+        
+        /* TABLE BENAR/SALAH */
+        .bs-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        .bs-table th, .bs-table td { border: 1px solid var(--border-color); padding: 12px; text-align: center; }
+        .bs-table td:first-child { text-align: left; width: 70%; }
+        .bs-table th { background: #fdfdfd; color: #555; }
+        .bs-table input[type="radio"] { transform: scale(1.3); cursor: pointer; }
+
+        /* FOOTER NAV */
+        .cbt-footer-nav { display: flex; justify-content: space-between; padding: 20px 30px; }
+        .btn-nav { padding: 10px 25px; border-radius: 5px; border: none; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+        .btn-prev { background: #fff; border: 1px solid #ccc; color: #333; }
+        .btn-ragu { background: #ffc107; color: #000; }
+        .btn-next { background: var(--primary-blue); color: white; }
+
+        /* FOOTER BRANDING */
+        .cbt-footer { background: var(--dark-blue); color: white; padding: 10px 30px; display: flex; justify-content: space-between; font-size: 0.8rem; }
+
+        /* LOGIN & RESULT SCREENS */
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; flex: 1; }
+        .center-box { margin: auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
+        .center-box input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 1.1rem; text-align: center; }
+        .center-box .btn-submit { background: var(--primary-blue); color: white; width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        
+        /* MODAL DAFTAR SOAL */
+        #modal-grid { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: 350px; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 100; padding: 20px; flex-direction: column; border-left: 4px solid var(--primary-blue);}
+        .grid-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 15px;}
+        .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; overflow-y: auto; }
+        .grid-btn { padding: 10px 0; text-align: center; border: 1px solid #ccc; border-radius: 5px; background: white; cursor: pointer; font-weight: bold; }
+        .grid-btn.answered { background: #0d6efd; color: white; border-color: #0d6efd; }
+        
+        @media (max-width: 768px) {
+            .cbt-card { flex-direction: column; }
+            .cbt-left { border-right: none; border-bottom: 2px dashed #ccc; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="screen-login" class="screen active">
+        <div class="center-box">
+            <h2 style="color: var(--dark-blue); margin-top: 0;">Portal Ujian CBT</h2>
+            <p style="color: #666;">Masukkan PIN Akses Kuis Anda</p>
+            <input type="password" id="pin-input" placeholder="PIN UJIAN">
+            <button class="btn-submit" onclick="startQuiz()">MASUK</button>
+        </div>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+        <div class="cbt-header">
+            <div class="header-left">
+                <div class="soal-title">Soal nomor</div>
+                <div class="soal-number" id="q-number">1</div>
+                <div class="font-controls">
+                    Ukuran font soal: 
+                    <span style="font-size: 0.9em;" onclick="changeFontSize(14)">A</span>
+                    <span style="font-size: 1.1em;" onclick="changeFontSize(18)">A</span>
+                    <span style="font-size: 1.3em;" onclick="changeFontSize(22)">A</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn-header">INFORMASI SOAL</button>
+                <div class="timer-pill">Sisa Waktu : <span id="timer-display">00:00:00</span></div>
+                <button class="btn-header" onclick="toggleGrid()"><svg style="width:16px;height:16px;margin-right:5px;" viewBox="0 0 24 24"><path fill="currentColor" d="M3,3H9V9H3V3M15,3H21V9H15V3M3,15H9V21H3V15M15,15H21V21H15V15Z" /></svg> Daftar Soal</button>
+                <div class="subject-title" id="subject-name">Loading...</div>
+            </div>
+        </div>
+
+        <div class="cbt-body">
+            <div class="cbt-card" id="cbt-content-area">
+                <div class="cbt-left" id="cbt-left"></div>
+                <div class="cbt-right" id="cbt-right"></div>
+            </div>
+        </div>
+
+        <div class="cbt-footer-nav">
+            <button class="btn-nav btn-prev" id="btn-prev" onclick="navQuestion(-1)">SOAL SEBELUMNYA</button>
+            <button class="btn-nav btn-ragu">RAGU-RAGU</button>
+            <button class="btn-nav btn-next" id="btn-next" onclick="navQuestion(1)">SOAL SELANJUTNYA</button>
+        </div>
+
+        <div class="cbt-footer">
+            <div>Belajar Sukses - Sistem CBT V8.1</div>
+            <div>&copy; <span id="year"></span> Hak Cipta Dilindungi</div>
+        </div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <div class="center-box" style="max-width: 600px;">
+            <h1 style="color: var(--dark-blue);">Ujian Selesai</h1>
+            <p style="font-size: 1.2rem;">Nilai Akhir Anda:</p>
+            <div style="font-size: 5rem; font-weight: bold; color: var(--primary-blue); border: 5px solid var(--primary-blue); width: 180px; height: 180px; line-height: 170px; border-radius: 50%; margin: 20px auto;">
+                <span id="final-score">0</span>
+            </div>
+            <h3 id="result-msg"></h3>
+            <button class="btn-submit" style="margin-top: 20px;" onclick="location.reload()">Selesai</button>
+        </div>
+    </div>
+
+    <div id="modal-grid">
+        <div class="grid-header">
+            <span>Daftar Soal</span>
+            <span style="cursor:pointer; color: red;" onclick="toggleGrid()">TUTUP X</span>
+        </div>
+        <div class="grid-container" id="grid-container"></div>
+    </div>
+
+<script>
+    const JUDUL_KUIS = "TKA SD KELAS 6"; 
+    const PIN_AKSES = "123456";
+    const WAKTU_MENIT = 70;
+    const TARGET_TOTAL_SOAL = 30;
+
+    const RAW_DATA = `
+[PASTE DATA RAW ANDA DI SINI - PASTIKAN SEMUA SOAL TUNGGAL DAN CLUSTER MASUK]
+`;
+
+    let RAW_SINGLE = [];
+    let RAW_CLUSTER = [];
+    let finalQuestionList = [];
+    let userAnswers = {};
+    let currentQIndex = 0;
+    let timerInterval;
+    let timeLeft = WAKTU_MENIT * 60;
+
+    document.getElementById('subject-name').innerText = JUDUL_KUIS;
+    document.getElementById('year').innerText = new Date().getFullYear();
+
+    // PARSER V8.1 - ANTI CRASH & MULTI-BLOCK SUPPORT
+    function parseRawData() {
+        RAW_SINGLE = [];
+        RAW_CLUSTER = [];
+        
+        let lines = RAW_DATA.split('\n');
+        let isSingle = false;
+        let isCluster = false;
+        let currentWacana = "";
+        let currentQuestions = [];
+        
+        for(let i=0; i<lines.length; i++) {
+            let line = lines[i].trim();
+            if(!line) continue;
+
+            if (line.indexOf('START SOAL TUNGGAL') !== -1) {
+                isSingle = true; isCluster = false; continue;
+            }
+            if (line.indexOf('END SOAL TUNGGAL') !== -1) {
+                isSingle = false; continue;
